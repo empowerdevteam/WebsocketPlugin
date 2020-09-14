@@ -41,6 +41,12 @@ import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.net.wifi.WifiManager;
+
 
 public class CordovaWebsocketPlugin extends CordovaPlugin {
     private static final String TAG = "CordovaWebsocketPlugin";
@@ -70,11 +76,18 @@ public class CordovaWebsocketPlugin extends CordovaPlugin {
     public void onDestroy() {
         super.onDestroy();
         closeAllSockets();
+        cordova.getActivity().unregisterReceiver(wifiStateReceiver);
     }
 
     @Override
     public void onReset() {
         super.onReset();
+    }
+    @Override
+    protected void onStart() {
+        super.onStart();
+        IntentFilter intentFilter = new IntentFilter(WifiManager.WIFI_STATE_CHANGED_ACTION);
+         cordova.getActivity().registerReceiver(wifiStateReceiver, intentFilter);
     }
 
     private void closeAllSockets() {
@@ -415,4 +428,20 @@ public class CordovaWebsocketPlugin extends CordovaPlugin {
             return true;
         }
     }
+    private BroadcastReceiver wifiStateReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            int wifiStateExtra = intent.getIntExtra(WifiManager.EXTRA_WIFI_STATE,
+                    WifiManager.WIFI_STATE_UNKNOWN);
+            switch (wifiStateExtra) {
+                case WifiManager.WIFI_STATE_ENABLED:
+                Log.i("BroadcastReceiver11",""+WifiManager.WIFI_STATE_ENABLED);
+                    
+                    break;
+                case WifiManager.WIFI_STATE_DISABLED:
+                Log.i("BroadcastReceiver11",""+WifiManager.WIFI_STATE_DISABLED);
+                    break;
+            }
+        }
+    };
 }
