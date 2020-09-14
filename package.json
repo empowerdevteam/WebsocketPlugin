@@ -1,0 +1,20 @@
+{
+  "name": "cordova-plugin-advanced-websocket",
+  "version": "1.0.0",
+  "cordova": {
+    "id": "cordova-plugin-advanced-websocket",
+    "platforms": [
+      "android"
+    ]
+  },
+  
+  "keywords": [
+    "cordova",
+    "websocket",
+    "cordova-ios",
+    "cordova-android"
+  ],
+  "description": "Cordova Plugin for using WebSockets",
+  "author": "",
+  "license": "ISC"
+}
