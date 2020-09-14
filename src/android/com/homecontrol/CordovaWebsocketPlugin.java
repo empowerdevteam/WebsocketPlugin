@@ -92,6 +92,7 @@ public class CordovaWebsocketPlugin extends CordovaPlugin {
         } catch (JSONException e) {
             Log.e(TAG, e.getMessage());
         }
+        reconnect();
     }
 
     private void wsAddListeners(JSONArray args, CallbackContext recvCallbackContext) {
@@ -130,6 +131,50 @@ public class CordovaWebsocketPlugin extends CordovaPlugin {
         } catch (JSONException e) {
             Log.e(TAG, e.getMessage());
         }
+    }
+    public void reconnect() {
+        final WebSocketAdvanced self = this;
+        cordova.getThreadPool().execute(new Runnable() {
+           @Override
+           public void run() {
+               while (true) {
+                try {
+                    Thread.sleep(90000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                   
+                   try {
+                       if (self.webSocket != null) {
+                           self.webSocket.close(1000, "Disconnect");
+                           self.webSocket = null;
+                       }
+                       self.webSocket = client.newWebSocket(request, self);
+                       self.socketStatus = SocketStatus.CONNECTED;
+                       Log.i("Reconnect123******", "Connected");
+
+                   } catch (Exception e) {
+                       self.webSocket = null;
+                       self.socketStatus = SocketStatus.FAILURE;
+                       Log.i("exceptionNetwork******", "" + e.getMessage());
+                   }
+                   try {
+                       Thread.sleep(30000);
+                   } catch (InterruptedException e) {
+                       e.printStackTrace();
+                   }
+               }
+
+               //self.client.dispatcher().executorService().shutdown();
+
+
+
+           }
+
+
+
+
+        });
     }
 
     private class WebSocketAdvanced extends WebSocketListener {
