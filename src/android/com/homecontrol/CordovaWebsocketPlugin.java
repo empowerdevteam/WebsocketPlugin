@@ -84,7 +84,7 @@ public class CordovaWebsocketPlugin extends CordovaPlugin {
         super.onReset();
     }
     @Override
-    protected void onStart() {
+    public void onStart() {
         super.onStart();
         IntentFilter intentFilter = new IntentFilter(WifiManager.WIFI_STATE_CHANGED_ACTION);
          cordova.getActivity().registerReceiver(wifiStateReceiver, intentFilter);
