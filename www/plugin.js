@@ -25,12 +25,7 @@ var CordovaWebsocketPlugin = {
     },
     wsClose: function(wsId, code, reason) {
         exec(null, null, PLUGIN_NAME, 'wsClose', [wsId, code, reason]);
-    },
-    foreground: function(wsId) {
-        exec(null, null, PLUGIN_NAME, 'foreground', [wsId]);
     }
 };
-
-
 
 module.exports = CordovaWebsocketPlugin;

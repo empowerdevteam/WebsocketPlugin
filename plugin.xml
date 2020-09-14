@@ -2,10 +2,10 @@
 
 <plugin xmlns="http://apache.org/cordova/ns/plugins/1.0"
     id="cordova-plugin-advanced-websocket"
-    version="1.1.5">
+    version="1.0.0">
     <name>Cordova advanced websocket plugin</name>
     <description></description>
-    
+  
     <keywords></keywords>
     
 
@@ -25,15 +25,7 @@
             <uses-permission android:name="android.permission.INTERNET"/>
         </config-file>
 
-  <config-file target="AndroidManifest.xml" parent="/manifest/application">
-      <service android:name="com.homecontrol.WebsocketService"  />
-         </config-file>
-
-
-
       <source-file src="src/android/com/homecontrol/CordovaWebsocketPlugin.java" target-dir="src/com/homecontrol/" />
-     <source-file src="src/android/com/homecontrol/WebsocketService.java" target-dir="src/com/homecontrol/" />
-      <source-file src="src/android/com/homecontrol/SocketStatus.java" target-dir="src/com/homecontrol/" />
 
       <framework src="com.squareup.okhttp3:okhttp:3.10.0"/>
       <framework src="com.squareup.okhttp3:okhttp-urlconnection:3.10.0"/>

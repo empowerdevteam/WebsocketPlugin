@@ -41,21 +41,15 @@ import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
-import android.app.Activity;
-import android.content.Intent;
-
 
 public class CordovaWebsocketPlugin extends CordovaPlugin {
     private static final String TAG = "CordovaWebsocketPlugin";
 
-   // private Map<String, WebSocketAdvanced> webSockets = new ConcurrentHashMap<String, WebSocketAdvanced>();
-   public static Map<String, WebSocketAdvanced> webSockets = new ConcurrentHashMap<String, WebSocketAdvanced>();
+    private Map<String, WebSocketAdvanced> webSockets = new ConcurrentHashMap<String, WebSocketAdvanced>();
 
     public void initialize(CordovaInterface cordova, CordovaWebView webView) {
         super.initialize(cordova, webView);
 
-        Intent serviceIntent = new Intent(cordova.getActivity(), WebsocketService.class);
-        cordova.getActivity().startService(serviceIntent);
         Log.d(TAG, "Initializing CordovaWebsocketPlugin");
     }
 
@@ -68,8 +62,6 @@ public class CordovaWebsocketPlugin extends CordovaPlugin {
             this.wsSend(args, callbackContext);
         } else if (action.equals("wsClose")) {
             this.wsClose(args, callbackContext);
-        } else if (action.equals("foreground")) {
-            this.forground(args, callbackContext);
         }
         return true;
     }
@@ -140,29 +132,16 @@ public class CordovaWebsocketPlugin extends CordovaPlugin {
         }
     }
 
-    private void forground(JSONArray args,CallbackContext recvCallbackContext) {
-        try {
-        String webSocketId = args.getString(0);
-        Log.i("TAG",""+webSocketId);
-        Intent serviceIntent = new Intent(cordova.getActivity(), WebsocketService.class);
-        serviceIntent.putExtra("webSocketId", webSocketId);
-        cordova.getActivity().startService(serviceIntent);
-    } catch (JSONException e) {
-        Log.e(TAG, e.getMessage());
-    }
-    }
-
-    public class WebSocketAdvanced extends WebSocketListener {
+    private class WebSocketAdvanced extends WebSocketListener {
         
-        public WebSocket webSocket;
+        private WebSocket webSocket;
         private CallbackContext callbackContext;
         private CallbackContext recvCallbackContext = null;
         private ArrayList<PluginResult> messageBuffer;
-        public OkHttpClient client;
-        public Request request;
+        private OkHttpClient client;
+        private Request request;
 
         public String webSocketId;
-        public SocketStatus socketStatus = SocketStatus.CLOSED;
 
         public WebSocketAdvanced(JSONObject wsOptions, final CallbackContext callbackContext) {
             try {
@@ -223,66 +202,14 @@ public class CordovaWebsocketPlugin extends CordovaPlugin {
                     public void run() {
                         self.webSocket = client.newWebSocket(request, self);
                         // Trigger shutdown of the dispatcher's executor so this process can exit cleanly.
-                        //self.client.dispatcher().executorService().shutdown();
+                        self.client.dispatcher().executorService().shutdown();
                     }
                 });
-               // reconnect();
             } catch (JSONException e) {
                 Log.e(TAG, e.getMessage());
             }
         }
 
-        //Recoonect
-        public void reconnect() {
-            final WebSocketAdvanced self = this;
-            cordova.getThreadPool().execute(new Runnable() {
-               @Override
-               public void run() {
-                   while (true) {
-                    try {
-                        Thread.sleep(90000);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                       
-                       try {
-                           if (self.webSocket != null) {
-                               self.webSocket.close(1000, "Disconnect");
-                               self.webSocket = null;
-                           }
-                           self.webSocket = client.newWebSocket(request, self);
-                           self.socketStatus = SocketStatus.CONNECTED;
-                           // self.send("Hii12345");
-                           // self.webSocket.send("");
-                           Log.i("Reconnect123******", "Connected");
-                           // Trigger shutdown of the dispatcher's executor so this process can exit cleanly.
-
-
-
-                       } catch (Exception e) {
-                           // Toast.makeText(cordova.getContext(),""+e.getMessage(),Toast.LENGTH_SHORT).show();
-                           self.webSocket = null;
-                           self.socketStatus = SocketStatus.FAILURE;
-                           Log.i("exceptionNetwork******", "" + e.getMessage());
-                       }
-                       try {
-                           Thread.sleep(30000);
-                       } catch (InterruptedException e) {
-                           e.printStackTrace();
-                       }
-                   }
-
-                   //self.client.dispatcher().executorService().shutdown();
-
-
-
-               }
-
-
-
-
-            });
-        }
         public void setRecvListener(final CallbackContext recvCallbackContext, boolean flushRecvBuffer) {
             this.recvCallbackContext = recvCallbackContext;
             
@@ -305,14 +232,13 @@ public class CordovaWebsocketPlugin extends CordovaPlugin {
         }
 
         public boolean close(int code, String reason) {
-            socketStatus = SocketStatus.CLOSED;
             return this.webSocket.close(code, reason);
         }
     
         @Override public void onOpen(WebSocket webSocket, Response response) {
             try {
                 JSONObject successResult = new JSONObject();
-                socketStatus = SocketStatus.CONNECTED;
+
                 successResult.put("webSocketId", this.webSocketId);
                 successResult.put("code", response.code());
 
@@ -405,7 +331,6 @@ public class CordovaWebsocketPlugin extends CordovaPlugin {
                     result.setKeepCallback(true);
                     this.recvCallbackContext.sendPluginResult(result);
                 }
-                socketStatus = SocketStatus.FAILURE;
             } catch (JSONException e) {
                 Log.e(TAG, e.getMessage());
             } catch (Exception e) {
