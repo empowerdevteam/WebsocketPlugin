@@ -50,6 +50,7 @@ import android.net.wifi.WifiManager;
 
 public class CordovaWebsocketPlugin extends CordovaPlugin {
     private static final String TAG = "CordovaWebsocketPlugin";
+    public NetworkChangeReceiver networkReceiver ;
 
     private Map<String, WebSocketAdvanced> webSockets = new ConcurrentHashMap<String, WebSocketAdvanced>();
 
@@ -86,8 +87,9 @@ public class CordovaWebsocketPlugin extends CordovaPlugin {
     @Override
     public void onStart() {
         super.onStart();
+        networkReceiver = new NetworkChangeReceiver();
         IntentFilter intentFilter = new IntentFilter(WifiManager.WIFI_STATE_CHANGED_ACTION);
-         cordova.getActivity().registerReceiver(wifiStateReceiver, intentFilter);
+         cordova.getActivity().registerReceiver(networkReceiver, intentFilter);
     }
 
     private void closeAllSockets() {
@@ -157,6 +159,7 @@ public class CordovaWebsocketPlugin extends CordovaPlugin {
         private Request request;
 
         public String webSocketId;
+        public SocketStatus socketStatus = SocketStatus.Disconnect;
 
         public WebSocketAdvanced(JSONObject wsOptions, final CallbackContext callbackContext) {
             try {
@@ -361,11 +364,7 @@ public class CordovaWebsocketPlugin extends CordovaPlugin {
                 @Override
                 public void run() {
                     while (true) {
-                        try {
-                            Thread.sleep(90000);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
+                        
 
                         try {
                             if (self.webSocket != null) {
@@ -380,7 +379,7 @@ public class CordovaWebsocketPlugin extends CordovaPlugin {
                             Log.i("exceptionNetwork******", "" + e.getMessage());
                         }
                         try {
-                            Thread.sleep(30000);
+                            Thread.sleep(5000);
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
@@ -428,20 +427,5 @@ public class CordovaWebsocketPlugin extends CordovaPlugin {
             return true;
         }
     }
-    private BroadcastReceiver wifiStateReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            int wifiStateExtra = intent.getIntExtra(WifiManager.EXTRA_WIFI_STATE,
-                    WifiManager.WIFI_STATE_UNKNOWN);
-            switch (wifiStateExtra) {
-                case WifiManager.WIFI_STATE_ENABLED:
-                Log.i("BroadcastReceiver11",""+WifiManager.WIFI_STATE_ENABLED);
-                    
-                    break;
-                case WifiManager.WIFI_STATE_DISABLED:
-                Log.i("BroadcastReceiver11",""+WifiManager.WIFI_STATE_DISABLED);
-                    break;
-            }
-        }
-    };
+    
 }
