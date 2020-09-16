@@ -56,6 +56,7 @@ public class CordovaWebsocketPlugin extends CordovaPlugin {
 
     public void initialize(CordovaInterface cordova, CordovaWebView webView) {
         super.initialize(cordova, webView);
+        networkReceiver = new NetworkChangeReceiver();
 
         Log.d(TAG, "Initializing CordovaWebsocketPlugin");
     }
@@ -77,7 +78,7 @@ public class CordovaWebsocketPlugin extends CordovaPlugin {
     public void onDestroy() {
         super.onDestroy();
         closeAllSockets();
-        cordova.getActivity().unregisterReceiver(wifiStateReceiver);
+        cordova.getActivity().unregisterReceiver(networkReceiver);
     }
 
     @Override
@@ -87,7 +88,7 @@ public class CordovaWebsocketPlugin extends CordovaPlugin {
     @Override
     public void onStart() {
         super.onStart();
-        networkReceiver = new NetworkChangeReceiver();
+      
         IntentFilter intentFilter = new IntentFilter(WifiManager.WIFI_STATE_CHANGED_ACTION);
          cordova.getActivity().registerReceiver(networkReceiver, intentFilter);
     }
@@ -159,7 +160,7 @@ public class CordovaWebsocketPlugin extends CordovaPlugin {
         private Request request;
 
         public String webSocketId;
-        public SocketStatus socketStatus = SocketStatus.Disconnect;
+        public SocketStatus socketStatus = SocketStatus.DISCONNECTED;
 
         public WebSocketAdvanced(JSONObject wsOptions, final CallbackContext callbackContext) {
             try {

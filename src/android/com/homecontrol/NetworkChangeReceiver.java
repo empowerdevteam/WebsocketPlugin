@@ -1,4 +1,4 @@
-package com.group.myapplication;
+package com.homecontrol;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
