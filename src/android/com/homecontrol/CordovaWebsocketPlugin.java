@@ -1,37 +1,29 @@
 package com.homecontrol;
 
+import android.content.IntentFilter;
+import android.net.wifi.WifiManager;
+import android.util.Log;
+
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaInterface;
 import org.apache.cordova.CordovaPlugin;
 import org.apache.cordova.CordovaWebView;
+import org.apache.cordova.LOG;
 import org.apache.cordova.PluginResult;
 import org.apache.cordova.PluginResult.Status;
-import org.json.JSONObject;
 import org.json.JSONArray;
 import org.json.JSONException;
-
-import android.util.Log;
-
-import java.util.Date;
-import java.util.Iterator;
-import java.util.UUID;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
-import java.util.ArrayList;
-
-import java.io.IOException;
-
-import okhttp3.WebSocket;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
-import okhttp3.WebSocketListener;
-import okio.ByteString;
+import org.json.JSONObject;
 
 import java.security.SecureRandom;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.KeyManager;
@@ -41,18 +33,23 @@ import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
-import android.net.wifi.WifiManager;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+import okhttp3.WebSocket;
+import okhttp3.WebSocketListener;
+import okio.ByteString;
+
+import static com.homecontrol.SocketConfig.debug_message;
+import static com.homecontrol.SocketConfig.retry_polling_interval;
+import static com.homecontrol.SocketConfig.retry_timeout_min;
 
 
 public class CordovaWebsocketPlugin extends CordovaPlugin {
     private static final String TAG = "CordovaWebsocketPlugin";
-    public NetworkChangeReceiver networkReceiver ;
+    public NetworkChangeReceiver networkReceiver;
 
-    private Map<String, WebSocketAdvanced> webSockets = new ConcurrentHashMap<String, WebSocketAdvanced>();
+    private static Map<String, WebSocketAdvanced> webSockets = new ConcurrentHashMap<String, WebSocketAdvanced>();
 
     public void initialize(CordovaInterface cordova, CordovaWebView webView) {
         super.initialize(cordova, webView);
@@ -60,6 +57,11 @@ public class CordovaWebsocketPlugin extends CordovaPlugin {
 
         Log.d(TAG, "Initializing CordovaWebsocketPlugin");
     }
+// Sharing Concurrent Hashmap with other Thread as it is thread safe
+    public static Map<String, WebSocketAdvanced> getApplicationWebSocket() {
+        return webSockets;
+    }
+
 
     public boolean execute(String action, JSONArray args, final CallbackContext callbackContext) throws JSONException {
         if (action.equals("wsConnect")) {
@@ -85,16 +87,17 @@ public class CordovaWebsocketPlugin extends CordovaPlugin {
     public void onReset() {
         super.onReset();
     }
+
     @Override
     public void onStart() {
         super.onStart();
-      
+
         IntentFilter intentFilter = new IntentFilter(WifiManager.WIFI_STATE_CHANGED_ACTION);
-         cordova.getActivity().registerReceiver(networkReceiver, intentFilter);
+        cordova.getActivity().registerReceiver(networkReceiver, intentFilter);
     }
 
     private void closeAllSockets() {
-        for(WebSocketAdvanced ws : this.webSockets.values()) {
+        for (WebSocketAdvanced ws : this.webSockets.values()) {
             ws.close(1000, "Disconnect");
         }
         this.webSockets.clear();
@@ -108,7 +111,7 @@ public class CordovaWebsocketPlugin extends CordovaPlugin {
         } catch (JSONException e) {
             Log.e(TAG, e.getMessage());
         }
-       
+
     }
 
     private void wsAddListeners(JSONArray args, CallbackContext recvCallbackContext) {
@@ -148,19 +151,20 @@ public class CordovaWebsocketPlugin extends CordovaPlugin {
             Log.e(TAG, e.getMessage());
         }
     }
- 
+
 
     public class WebSocketAdvanced extends WebSocketListener {
-        
+
         private WebSocket webSocket;
         private CallbackContext callbackContext;
         private CallbackContext recvCallbackContext = null;
         private ArrayList<PluginResult> messageBuffer;
         private OkHttpClient client;
         private Request request;
-
         public String webSocketId;
         public SocketStatus socketStatus = SocketStatus.DISCONNECTED;
+        private boolean isReconnectionThread = false;
+
 
         public WebSocketAdvanced(JSONObject wsOptions, final CallbackContext callbackContext) {
             try {
@@ -168,11 +172,11 @@ public class CordovaWebsocketPlugin extends CordovaPlugin {
                 this.webSocketId = UUID.randomUUID().toString();
                 this.messageBuffer = new ArrayList<PluginResult>();
 
-                String wsUrl =              wsOptions.getString("url");
-                int timeout =               wsOptions.optInt("timeout", 0);
-                int pingInterval =          wsOptions.optInt("pingInterval", 0);
-                JSONObject wsHeaders =      wsOptions.optJSONObject("headers");
-                boolean acceptAllCerts =    wsOptions.optBoolean("acceptAllCerts", false);
+                String wsUrl = wsOptions.getString("url");
+                int timeout = wsOptions.optInt("timeout", 0);
+                int pingInterval = wsOptions.optInt("pingInterval", 0);
+                JSONObject wsHeaders = wsOptions.optJSONObject("headers");
+                boolean acceptAllCerts = wsOptions.optBoolean("acceptAllCerts", false);
 
                 OkHttpClient.Builder clientBuilder = new OkHttpClient.Builder();
                 Request.Builder requestBuilder = new Request.Builder();
@@ -189,7 +193,7 @@ public class CordovaWebsocketPlugin extends CordovaPlugin {
                         TrustManager[] trustManagers = new TrustManager[]{gullibleTrustManager};
                         SecureRandom secureRandom = new SecureRandom();
                         sslContext.init(keyManagers, trustManagers, secureRandom);
-                        
+
                         // Create an ssl socket factory with our all-trusting manager
                         final SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
 
@@ -221,9 +225,11 @@ public class CordovaWebsocketPlugin extends CordovaPlugin {
                     public void run() {
                         self.webSocket = client.newWebSocket(request, self);
                         // Trigger shutdown of the dispatcher's executor so this process can exit cleanly.
-                        self.client.dispatcher().executorService().shutdown();
+                        //To Enable recoonection it has been kept in running state, it would be handled by the dispatcher service.
+                        // self.client.dispatcher().executorService().shutdown();
                     }
                 });
+
             } catch (JSONException e) {
                 Log.e(TAG, e.getMessage());
             }
@@ -231,10 +237,10 @@ public class CordovaWebsocketPlugin extends CordovaPlugin {
 
         public void setRecvListener(final CallbackContext recvCallbackContext, boolean flushRecvBuffer) {
             this.recvCallbackContext = recvCallbackContext;
-            
-            if (!this.messageBuffer.isEmpty() && flushRecvBuffer){
+
+            if (!this.messageBuffer.isEmpty() && flushRecvBuffer) {
                 Iterator<PluginResult> messageIterator = this.messageBuffer.iterator();
-                while(messageIterator.hasNext()){
+                while (messageIterator.hasNext()) {
                     PluginResult message = messageIterator.next();
                     recvCallbackContext.sendPluginResult(message);
                     messageIterator.remove();
@@ -253,28 +259,31 @@ public class CordovaWebsocketPlugin extends CordovaPlugin {
         public boolean close(int code, String reason) {
             return this.webSocket.close(code, reason);
         }
-    
-        @Override public void onOpen(WebSocket webSocket, Response response) {
+
+        @Override
+        public void onOpen(WebSocket webSocket, Response response) {
             try {
                 JSONObject successResult = new JSONObject();
 
                 successResult.put("webSocketId", this.webSocketId);
                 successResult.put("code", response.code());
-
+                socketStatus = SocketStatus.CONNECTED;
+                Log.d(debug_message,"OnOpen");
                 this.callbackContext.success(successResult);
             } catch (JSONException e) {
                 Log.e(TAG, e.getMessage());
             }
         }
-    
-        @Override public void onMessage(WebSocket webSocket, String text) {
+
+        @Override
+        public void onMessage(WebSocket webSocket, String text) {
             try {
                 JSONObject callbackResult = new JSONObject();
-                
+
                 callbackResult.put("callbackMethod", "onMessage");
                 callbackResult.put("webSocketId", this.webSocketId);
                 callbackResult.put("message", text);
-                
+
                 PluginResult result = new PluginResult(Status.OK, callbackResult);
                 result.setKeepCallback(true);
 
@@ -287,8 +296,9 @@ public class CordovaWebsocketPlugin extends CordovaPlugin {
                 Log.e(TAG, e.getMessage());
             }
         }
-    
-        @Override public void onMessage(WebSocket webSocket, ByteString bytes) {
+
+        @Override
+        public void onMessage(WebSocket webSocket, ByteString bytes) {
             try {
                 JSONObject callbackResult = new JSONObject();
 
@@ -308,8 +318,9 @@ public class CordovaWebsocketPlugin extends CordovaPlugin {
                 Log.e(TAG, e.getMessage());
             }
         }
-    
-        @Override public void onClosing(WebSocket webSocket, int code, String reason) {
+
+        @Override
+        public void onClosing(WebSocket webSocket, int code, String reason) {
             try {
                 JSONObject callbackResult = new JSONObject();
 
@@ -317,7 +328,8 @@ public class CordovaWebsocketPlugin extends CordovaPlugin {
                 callbackResult.put("webSocketId", this.webSocketId);
                 callbackResult.put("code", code);
                 callbackResult.put("reason", reason);
-
+                socketStatus = SocketStatus.DISCONNECTED;
+                Log.d(debug_message, "closing");
                 if (this.recvCallbackContext != null) {
                     PluginResult result = new PluginResult(Status.OK, callbackResult);
                     result.setKeepCallback(true);
@@ -327,76 +339,80 @@ public class CordovaWebsocketPlugin extends CordovaPlugin {
                 Log.e(TAG, e.getMessage());
             }
         }
-    
-        @Override public void onFailure(WebSocket webSocket, Throwable t, Response response) {
-        /*    try {
-                JSONObject failResult = new JSONObject();
 
-                failResult.put("webSocketId", this.webSocketId);
-                if (t != null) {
-                    failResult.put("code", 1006); // unexpected close
-                    failResult.put("exception", t.getMessage()); 
-                } else if (response != null) {
-                    failResult.put("code", response.code());
-                    failResult.put("reason", response.message());
-                }
-                
-                if (!this.callbackContext.isFinished()) {
-                    this.callbackContext.error(failResult);
-                }
-                if (this.recvCallbackContext != null) {
-                    failResult.put("callbackMethod", "onFail");
-                    PluginResult result = new PluginResult(Status.ERROR, failResult);
-                    result.setKeepCallback(true);
-                    this.recvCallbackContext.sendPluginResult(result);
-                }
-            } catch (JSONException e) {
-                Log.e(TAG, e.getMessage());
-            } catch (Exception e) {
-                Log.e(TAG, e.getMessage());
-            }*/
+        @Override
+        public void onClosed(WebSocket webSocket, int code, String reason) {
+            Log.d(debug_message, "onclose");
+            socketStatus = SocketStatus.DISCONNECTED;
 
-            reconnect();
         }
 
+        @Override
+        public void onFailure(WebSocket webSocket, Throwable t, Response response) {
+            Log.d(debug_message, "OnFailure");
+            socketStatus = SocketStatus.DISCONNECTED;
+                reconnect();
+
+        }
+
+
         public void reconnect() {
+
+          if (isReconnectionThread){
+              LOG.d(debug_message,"Already Running Thread");
+              return;
+          }
             final WebSocketAdvanced self = this;
             cordova.getThreadPool().execute(new Runnable() {
                 @Override
                 public void run() {
-                    while (true) {
-                        
+                    isReconnectionThread = true;
+                    long remaining_duration = retry_timeout_min * 60;
+                    if (socketStatus == SocketStatus.DISCONNECTED) {
+                        while (remaining_duration > 0) {
 
-                        try {
-                            if (self.webSocket != null) {
-                                self.webSocket.close(1000, "Disconnect");
+                            try {
+                                if (self.webSocket != null) {
+                                    self.webSocket.close(SocketConfig.socket_close_code, "Disconnect");
+                                    self.webSocket = null;
+                                }
+                                self.webSocket = client.newWebSocket(request, self);
+
+                            } catch (Exception e) {
+                                Log.e(debug_message, "" + e.getMessage());
                                 self.webSocket = null;
+                                socketStatus = SocketStatus.DISCONNECTED;
+
                             }
-                            self.webSocket = client.newWebSocket(request, self);
-                            Log.i("Reconnect123******", "Connected");
+                            try {
+                                Thread.sleep(retry_polling_interval);
+                            } catch (InterruptedException e) {
+                                self.webSocket = null;
+                                e.printStackTrace();
+                            }
+                            remaining_duration = remaining_duration - ((retry_polling_interval) / (1000));
+                            Log.d(debug_message,""+remaining_duration);
+                            if (socketStatus == SocketStatus.CONNECTED){
+                                LOG.d(debug_message,"Exiting Thread");
+                                isReconnectionThread = false;
+                                return;
+                            }
 
-                        } catch (Exception e) {
-                            self.webSocket = null;
-                            Log.i("exceptionNetwork******", "" + e.getMessage());
-                        }
-                        try {
-                            Thread.sleep(5000);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
+                        }// End While
+                        isReconnectionThread = false;
+                        LOG.d(debug_message,"TimeOut Reached.Exiting Thread");
+                        //Shutdown isn't necessary: Cannot be called as it will block future subsequent reconnects
+                        // It will be handled by the dispatcher
+                        //https://square.github.io/okhttp/3.x/okhttp/index.html?okhttp3/OkHttpClient.html
+                        //self.client.dispatcher().executorService().shutdown();
+
                     }
-
-                    //self.client.dispatcher().executorService().shutdown();
-
-
 
                 }
 
-
-
-
             });
         }
+
     }
 
     private class GullibleTrustManager implements X509TrustManager {
@@ -419,7 +435,9 @@ public class CordovaWebsocketPlugin extends CordovaPlugin {
                                        final String authType) throws CertificateException {
             Log.d(TAG, "authType: " + String.valueOf(authType));
         }
-    };
+    }
+
+    ;
 
     private class GullibleHostnameVerifier implements HostnameVerifier {
 
@@ -428,5 +446,5 @@ public class CordovaWebsocketPlugin extends CordovaPlugin {
             return true;
         }
     }
-    
+
 }
