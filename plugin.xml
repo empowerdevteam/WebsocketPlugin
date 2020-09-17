@@ -29,7 +29,7 @@
         </config-file>
 
       <source-file src="src/android/com/homecontrol/CordovaWebsocketPlugin.java" target-dir="src/com/homecontrol/" />
-      <source-file src="src/android/com/homecontrol/Constant.java" target-dir="src/com/homecontrol/" />
+      <source-file src="src/android/com/homecontrol/SocketConfig.java" target-dir="src/com/homecontrol/" />
       <source-file src="src/android/com/homecontrol/NetworkChangeReceiver.java" target-dir="src/com/homecontrol/" />
       <source-file src="src/android/com/homecontrol/SocketStatus.java" target-dir="src/com/homecontrol/" />
 
