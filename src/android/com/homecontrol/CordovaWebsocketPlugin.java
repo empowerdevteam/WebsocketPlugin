@@ -269,14 +269,7 @@ public class CordovaWebsocketPlugin extends CordovaPlugin {
                 successResult.put("code", response.code());
                 socketStatus = SocketStatus.CONNECTED;
                 Log.d(debug_message,"OnOpen");
-              //  this.callbackContext.success(successResult);
-
-                 PluginResult result = new PluginResult(Status.OK, successResult);
-                result.setKeepCallback(true);
-
-                if (this.recvCallbackContext != null) {
-                    this.recvCallbackContext.sendPluginResult(result);
-                } 
+               this.callbackContext.success(successResult);
             } catch (JSONException e) {
                 Log.e(TAG, e.getMessage());
             }
