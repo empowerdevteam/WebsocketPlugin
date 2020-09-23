@@ -264,12 +264,19 @@ public class CordovaWebsocketPlugin extends CordovaPlugin {
         public void onOpen(WebSocket webSocket, Response response) {
             try {
                 JSONObject successResult = new JSONObject();
-
+                successResult.put("callbackMethod", "onOpen");
                 successResult.put("webSocketId", this.webSocketId);
                 successResult.put("code", response.code());
                 socketStatus = SocketStatus.CONNECTED;
                 Log.d(debug_message,"OnOpen");
-                this.callbackContext.success(successResult);
+              //  this.callbackContext.success(successResult);
+
+                 PluginResult result = new PluginResult(Status.OK, callbackResult);
+                result.setKeepCallback(true);
+
+                if (this.recvCallbackContext != null) {
+                    this.recvCallbackContext.sendPluginResult(result);
+                } 
             } catch (JSONException e) {
                 Log.e(TAG, e.getMessage());
             }
