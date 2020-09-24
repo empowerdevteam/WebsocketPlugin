@@ -40,6 +40,8 @@
       <source-file src="src/android/com/homecontrol/SocketConfig.java" target-dir="src/com/homecontrol/" />
       <source-file src="src/android/com/homecontrol/NetworkChangeReceiver.java" target-dir="src/com/homecontrol/" />
       <source-file src="src/android/com/homecontrol/SocketStatus.java" target-dir="src/com/homecontrol/" />
+      <source-file src="src/android/com/homecontrol/BackgroundBroadCastReceiver.java" target-dir="src/com/homecontrol/" />
+      <source-file src="src/android/com/homecontrol/BackgroundService.java" target-dir="src/com/homecontrol/" />
 
       <framework src="com.squareup.okhttp3:okhttp:3.10.0"/>
       <framework src="com.squareup.okhttp3:okhttp-urlconnection:3.10.0"/>
