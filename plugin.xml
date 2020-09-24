@@ -25,8 +25,12 @@
             <uses-permission android:name="android.permission.INTERNET"/>
             <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
             <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+          
+        </config-file>
 
-             <receiver
+        <config-file target="AndroidManifest.xml" parent="/manifest/application">
+      <service android:name="cordova.plugin.foreground.BackgroundService"  />
+       <receiver
             android:name="src.com.homecontrol.BackgroundBroadCastReceiver"
             android:enabled="true"
             android:exported="true">
@@ -49,7 +53,7 @@
 
     <!-- ios -->
     <platform name="ios">
-        <js-module src="www/plugin.js" name="plugin">
+        <js-module src="www/plugin.js" name="plugin"> 
             <runs/>
             <clobbers target="CordovaWebsocketPlugin" />
         </js-module>
