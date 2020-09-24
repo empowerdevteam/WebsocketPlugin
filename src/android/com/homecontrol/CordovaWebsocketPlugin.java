@@ -81,6 +81,12 @@ public class CordovaWebsocketPlugin extends CordovaPlugin {
         super.onDestroy();
         closeAllSockets();
         cordova.getActivity().unregisterReceiver(networkReceiver);
+
+        // BackgroundBroadcastReceiver 
+        Intent broadcastIntent = new Intent();
+        broadcastIntent.setAction("BackGroundService");
+        broadcastIntent.setClass(this, BackgroundBroadCastReceiver.class);
+        this.sendBroadcast(broadcastIntent);
     }
 
     @Override

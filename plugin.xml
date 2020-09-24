@@ -26,6 +26,16 @@
             <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
             <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
 
+             <receiver
+            android:name="src.com.homecontrol.BackgroundBroadCastReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="BackGroundService" />
+            </intent-filter>
+        </receiver>
+    </application>
+
         </config-file>
 
       <source-file src="src/android/com/homecontrol/CordovaWebsocketPlugin.java" target-dir="src/com/homecontrol/" />
