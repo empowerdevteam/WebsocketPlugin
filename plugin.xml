@@ -34,8 +34,6 @@
                 <action android:name="BackGroundService" />
             </intent-filter>
         </receiver>
-    </application>
-
         </config-file>
 
       <source-file src="src/android/com/homecontrol/CordovaWebsocketPlugin.java" target-dir="src/com/homecontrol/" />
