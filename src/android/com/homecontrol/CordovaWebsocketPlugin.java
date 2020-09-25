@@ -82,6 +82,11 @@ public class CordovaWebsocketPlugin extends CordovaPlugin {
         super.onDestroy();
         closeAllSockets();
         cordova.getActivity().unregisterReceiver(networkReceiver);
+        //Start BackgroundBroadcastReceiver 
+        Intent broadcastIntent = new Intent();
+        broadcastIntent.setAction("BackGroundService");
+        broadcastIntent.setClass(cordova.getActivity(), BackgroundBroadCastReceiver.class);
+        cordova.getActivity().sendBroadcast(broadcastIntent);
 
        
     }
@@ -97,11 +102,7 @@ public class CordovaWebsocketPlugin extends CordovaPlugin {
 
         IntentFilter intentFilter = new IntentFilter(WifiManager.WIFI_STATE_CHANGED_ACTION);
         cordova.getActivity().registerReceiver(networkReceiver, intentFilter);
-         //Start BackgroundBroadcastReceiver 
-         Intent broadcastIntent = new Intent();
-         broadcastIntent.setAction("BackGroundService");
-         broadcastIntent.setClass(cordova.getActivity(), BackgroundBroadCastReceiver.class);
-         cordova.getActivity().sendBroadcast(broadcastIntent);
+         
     }
 
     private void closeAllSockets() {
