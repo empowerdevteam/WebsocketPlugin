@@ -79,7 +79,6 @@ public class CordovaWebsocketPlugin extends CordovaPlugin {
 
     @Override
     public void onDestroy() {
-        super.onDestroy();
         closeAllSockets();
         cordova.getActivity().unregisterReceiver(networkReceiver);
         //Start BackgroundBroadcastReceiver 
@@ -87,6 +86,7 @@ public class CordovaWebsocketPlugin extends CordovaPlugin {
         broadcastIntent.setAction("BackGroundService");
         broadcastIntent.setClass(cordova.getActivity(), BackgroundBroadCastReceiver.class);
         cordova.getActivity().sendBroadcast(broadcastIntent);
+        super.onDestroy();
 
        
     }
@@ -358,9 +358,37 @@ public class CordovaWebsocketPlugin extends CordovaPlugin {
 
         @Override
         public void onFailure(WebSocket webSocket, Throwable t, Response response) {
-            Log.d(debug_message, "OnFailure");
-            socketStatus = SocketStatus.DISCONNECTED;
-                reconnect();
+            try {
+                JSONObject failResult = new JSONObject();
+
+                failResult.put("webSocketId", this.webSocketId);
+                if (t != null) {
+                    failResult.put("code", 1006); // unexpected close
+                    failResult.put("exception", t.getMessage());
+                } else if (response != null) {
+                    failResult.put("code", response.code());
+                    failResult.put("reason", response.message());
+                }
+
+                if (!this.callbackContext.isFinished()) {
+                    this.callbackContext.error(failResult);
+                }
+                if (this.recvCallbackContext != null) {
+                    failResult.put("callbackMethod", "onFail");
+                    PluginResult result = new PluginResult(Status.ERROR, failResult);
+                    result.setKeepCallback(true);
+                    this.recvCallbackContext.sendPluginResult(result);
+
+                    Log.d(debug_message, "OnFailure");
+                    socketStatus = SocketStatus.DISCONNECTED;
+                    reconnect();
+
+                }
+            } catch (JSONException e) {
+                Log.e(TAG, e.getMessage());
+            } catch (Exception e) {
+                Log.e(TAG, e.getMessage());
+            }
 
         }
 
