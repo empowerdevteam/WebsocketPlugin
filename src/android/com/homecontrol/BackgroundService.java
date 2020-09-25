@@ -51,7 +51,7 @@ public class BackgroundService extends Service {
             mHandler.post(new Runnable() {
                 @Override
                 public void run() {
-                    Toast.makeText(this, "Servie already started", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(), "Servie already started", Toast.LENGTH_SHORT).show();
                   //  Log.i("Service********","timerruning");
                 }
             });
