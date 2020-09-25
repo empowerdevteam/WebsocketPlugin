@@ -31,7 +31,7 @@ public class BackgroundService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Toast.makeText(this, "Service Started", Toast.LENGTH_SHORT).show();
+       // Toast.makeText(this, "Service Started", Toast.LENGTH_SHORT).show();
 
 
         if(mTimer!=null)
@@ -51,7 +51,8 @@ public class BackgroundService extends Service {
             mHandler.post(new Runnable() {
                 @Override
                 public void run() {
-                    Log.i("Service********","timerruning");
+                    Toast.makeText(this, "Servie already started", Toast.LENGTH_SHORT).show();
+                  //  Log.i("Service********","timerruning");
                 }
             });
         }
