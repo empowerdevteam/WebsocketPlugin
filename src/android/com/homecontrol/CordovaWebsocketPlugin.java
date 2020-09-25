@@ -1,10 +1,12 @@
 package com.homecontrol;
 
+import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.wifi.WifiManager;
 import android.util.Log;
 
 import org.apache.cordova.CallbackContext;
+import org.apache.cordova.CordovaActivity;
 import org.apache.cordova.CordovaInterface;
 import org.apache.cordova.CordovaPlugin;
 import org.apache.cordova.CordovaWebView;
@@ -39,7 +41,6 @@ import okhttp3.Response;
 import okhttp3.WebSocket;
 import okhttp3.WebSocketListener;
 import okio.ByteString;
-
 import static com.homecontrol.SocketConfig.debug_message;
 import static com.homecontrol.SocketConfig.retry_polling_interval;
 import static com.homecontrol.SocketConfig.retry_timeout_min;
@@ -85,8 +86,8 @@ public class CordovaWebsocketPlugin extends CordovaPlugin {
         // BackgroundBroadcastReceiver 
         Intent broadcastIntent = new Intent();
         broadcastIntent.setAction("BackGroundService");
-        broadcastIntent.setClass(this, BackgroundBroadCastReceiver.class);
-        this.sendBroadcast(broadcastIntent);
+        broadcastIntent.setClass(cordova.getActivity(), BackgroundBroadCastReceiver.class);
+        cordova.getActivity().sendBroadcast(broadcastIntent);
     }
 
     @Override

@@ -1,4 +1,4 @@
-package com.heywatchme.backgroundwebsocket.broadcastreceiver;
+package com.homecontrol;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;

@@ -29,7 +29,7 @@
         </config-file>
 
         <config-file target="AndroidManifest.xml" parent="/manifest/application">
-      <service android:name="cordova.plugin.foreground.BackgroundService"  />
+      <service android:name="src.com.homecontrol.BackgroundService"  />
        <receiver
             android:name="src.com.homecontrol.BackgroundBroadCastReceiver"
             android:enabled="true"
