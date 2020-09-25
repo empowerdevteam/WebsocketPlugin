@@ -29,9 +29,9 @@
         </config-file>
 
         <config-file target="AndroidManifest.xml" parent="/manifest/application">
-      <service android:name="src.com.homecontrol.BackgroundService"  />
+      <service android:name="com.homecontrol.BackgroundService"  />
        <receiver
-            android:name="src.com.homecontrol.BackgroundBroadCastReceiver"
+            android:name="com.homecontrol.BackgroundBroadCastReceiver"
             android:enabled="true"
             android:exported="true">
             <intent-filter>
