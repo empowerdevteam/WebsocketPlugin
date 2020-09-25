@@ -7,9 +7,6 @@ import android.os.Build;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.heywatchme.backgroundwebsocket.backgroundservice.MyService;
-import com.heywatchme.backgroundwebsocket.foregroundservice.YourService;
-
 public class BackgroundBroadCastReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
