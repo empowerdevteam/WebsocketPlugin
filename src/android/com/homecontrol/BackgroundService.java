@@ -21,6 +21,7 @@ public class BackgroundService extends Service {
     private Handler mHandler=new Handler(); // run on another Thread to avoid crash
     private Timer mTimer=null;
     Map<String, CordovaWebsocketPlugin.WebSocketAdvanced> webSocketAdvancedMap;
+    public static boolean serviceRunning = false;
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
@@ -48,15 +49,12 @@ public class BackgroundService extends Service {
             mHandler.post(new Runnable() {
                 @Override
                 public void run() {
-                    Toast.makeText(getApplicationContext(), "Servie already started", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(), "Service already started", Toast.LENGTH_SHORT).show();
+                    if (!serviceRunning) {
+                        CordovaWebsocketPlugin.WebSocketAdvanced ws = new CordovaWebsocketPlugin.WebSocketAdvanced(wsOptions, null, true);
+                        Log.d("WSCode****", "" + ws);
+                        //Log.d("ResponseCode****",""+ws.responseCode);
 
-                    for (CordovaWebsocketPlugin.WebSocketAdvanced ws : webSocketAdvancedMap.values()) {
-                        try {
-                                //ws.reconnect();TODO: Create new instance of web-socket and establish new connection
-
-                        } catch (Exception e) {
-                            Log.e("Exception", e.getMessage());
-                        }
                     }
                 }
             });

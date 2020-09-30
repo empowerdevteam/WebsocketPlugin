@@ -162,7 +162,7 @@ public class CordovaWebsocketPlugin extends CordovaPlugin {
     }
 
 
-    public class WebSocketAdvanced extends WebSocketListener {
+    public static class WebSocketAdvanced extends WebSocketListener {
 
         private WebSocket webSocket;
         private CallbackContext callbackContext;
@@ -278,7 +278,11 @@ public class CordovaWebsocketPlugin extends CordovaPlugin {
                 successResult.put("code", response.code());
                 socketStatus = SocketStatus.CONNECTED;
                 Log.d(debug_message,"OnOpen");
-               this.callbackContext.success(successResult);
+                Log.d(debug_message,""+responseCode);
+                serviceRunning =true;
+                if (callbackContext!=null) {
+                    this.callbackContext.success(successResult);
+                }
             } catch (JSONException e) {
                 Log.e(TAG, e.getMessage());
             }
@@ -292,6 +296,7 @@ public class CordovaWebsocketPlugin extends CordovaPlugin {
                 callbackResult.put("callbackMethod", "onMessage");
                 callbackResult.put("webSocketId", this.webSocketId);
                 callbackResult.put("message", text);
+                Log.d("MessageReceived****", ""+text);
 
                 PluginResult result = new PluginResult(Status.OK, callbackResult);
                 result.setKeepCallback(true);
@@ -452,7 +457,7 @@ public class CordovaWebsocketPlugin extends CordovaPlugin {
 
     }
 
-    private class GullibleTrustManager implements X509TrustManager {
+    private static class GullibleTrustManager implements X509TrustManager {
         private static final String TAG = "GullibleTrustManager";
 
         @Override
@@ -476,7 +481,7 @@ public class CordovaWebsocketPlugin extends CordovaPlugin {
 
     ;
 
-    private class GullibleHostnameVerifier implements HostnameVerifier {
+    private static class GullibleHostnameVerifier implements HostnameVerifier {
 
         @Override
         public boolean verify(String hostname, SSLSession session) {
