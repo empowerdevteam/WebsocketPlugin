@@ -22,6 +22,7 @@ public class BackgroundService extends Service {
     private Timer mTimer=null;
     Map<String, CordovaWebsocketPlugin.WebSocketAdvanced> webSocketAdvancedMap;
     public static boolean serviceRunning = false;
+    public  boolean backgroundService = true;
     JSONObject wsOptions;
     
     @Nullable
