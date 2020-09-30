@@ -44,6 +44,7 @@ import okio.ByteString;
 import static com.homecontrol.SocketConfig.debug_message;
 import static com.homecontrol.SocketConfig.retry_polling_interval;
 import static com.homecontrol.SocketConfig.retry_timeout_min;
+import static com.homecontrol.BackgroundService.serviceRunning;
 
 
 public class CordovaWebsocketPlugin extends CordovaPlugin {
@@ -115,7 +116,7 @@ public class CordovaWebsocketPlugin extends CordovaPlugin {
     private void wsConnect(JSONArray args, CallbackContext callbackContext) {
         try {
             JSONObject wsOptions = args.getJSONObject(0);
-            WebSocketAdvanced ws = new WebSocketAdvanced(wsOptions, callbackContext);
+            WebSocketAdvanced ws = new WebSocketAdvanced(wsOptions, callbackContext, false);
             this.webSockets.put(ws.webSocketId, ws);
         } catch (JSONException e) {
             Log.e(TAG, e.getMessage());
@@ -173,9 +174,10 @@ public class CordovaWebsocketPlugin extends CordovaPlugin {
         public String webSocketId;
         public SocketStatus socketStatus = SocketStatus.DISCONNECTED;
         private boolean isReconnectionThread = false;
+        public int responseCode;
 
 
-        public WebSocketAdvanced(JSONObject wsOptions, final CallbackContext callbackContext) {
+        public WebSocketAdvanced(JSONObject wsOptions, final CallbackContext callbackContext, boolean backbackgroundService) {
             try {
                 this.callbackContext = callbackContext;
                 this.webSocketId = UUID.randomUUID().toString();
@@ -229,15 +231,19 @@ public class CordovaWebsocketPlugin extends CordovaPlugin {
 
                 final WebSocketAdvanced self = this;
 
-                cordova.getThreadPool().execute(new Runnable() {
-                    @Override
-                    public void run() {
-                        self.webSocket = client.newWebSocket(request, self);
-                        // Trigger shutdown of the dispatcher's executor so this process can exit cleanly.
-                        //To Enable recoonection it has been kept in running state, it would be handled by the dispatcher service.
-                        // self.client.dispatcher().executorService().shutdown();
-                    }
-                });
+                if (backbackgroundService){
+                    self.webSocket = client.newWebSocket(request, self);
+                }else{
+                    cordova.getThreadPool().execute(new Runnable() {
+                        @Override
+                        public void run() {
+                            self.webSocket = client.newWebSocket(request, self);
+                            // Trigger shutdown of the dispatcher's executor so this process can exit cleanly.
+                            //To Enable recoonection it has been kept in running state, it would be handled by the dispatcher service.
+                            // self.client.dispatcher().executorService().shutdown();
+                        }
+                    });
+                }
 
             } catch (JSONException e) {
                 Log.e(TAG, e.getMessage());
@@ -277,6 +283,7 @@ public class CordovaWebsocketPlugin extends CordovaPlugin {
                 successResult.put("webSocketId", this.webSocketId);
                 successResult.put("code", response.code());
                 socketStatus = SocketStatus.CONNECTED;
+                responseCode = response.code();
                 Log.d(debug_message,"OnOpen");
                 Log.d(debug_message,""+responseCode);
                 serviceRunning =true;

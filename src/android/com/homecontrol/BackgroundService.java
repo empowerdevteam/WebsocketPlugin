@@ -22,6 +22,8 @@ public class BackgroundService extends Service {
     private Timer mTimer=null;
     Map<String, CordovaWebsocketPlugin.WebSocketAdvanced> webSocketAdvancedMap;
     public static boolean serviceRunning = false;
+    JSONObject wsOptions;
+    
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
@@ -31,6 +33,16 @@ public class BackgroundService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         webSocketAdvancedMap = getApplicationWebSocket();
+
+        wsOptions  = new JSONObject();
+        try {
+            wsOptions.put("url","wss://2aqh15tm0b.execute-api.us-east-2.amazonaws.com/dev");
+            wsOptions.put("timeout","5000");
+            wsOptions.put("pingInterval","5000");
+            wsOptions.put("acceptAllCerts","false");
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
 
         if(mTimer!=null)
             mTimer.cancel();
