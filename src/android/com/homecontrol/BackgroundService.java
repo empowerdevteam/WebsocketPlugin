@@ -1,12 +1,20 @@
 package com.homecontrol;
 
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
+import android.support.annotation.RequiresApi;
 import android.util.Log;
 import android.widget.Toast;
+
+import org.apache.cordova.LOG;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -39,7 +47,7 @@ public class BackgroundService extends Service {
         try {
             wsOptions.put("url","wss://2aqh15tm0b.execute-api.us-east-2.amazonaws.com/dev");
             wsOptions.put("timeout","5000");
-            wsOptions.put("pingInterval","5000");
+            wsOptions.put("pingInterval","60000");
             wsOptions.put("acceptAllCerts","false");
         } catch (JSONException e) {
             e.printStackTrace();
@@ -52,25 +60,40 @@ public class BackgroundService extends Service {
         mTimer.scheduleAtFixedRate(new TimeDisplayTimerTask(),0,INTERVAL);
 
 
-        return START_STICKY;
+        return START_NOT_STICKY;
     }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        Log.d("RunningThread****","Stop");
+        mTimer.cancel();
+        serviceRunning = false;
+        mHandler.removeCallbacks(runnable);
+        stopSelfResult(1);
+
+    }
+
+    private Runnable runnable = new Runnable() {
+        @Override
+        public void run() {
+            Toast.makeText(getApplicationContext(), "Cordic Keep Alive Testing", Toast.LENGTH_SHORT).show();
+            if (!serviceRunning) {
+                CordovaWebsocketPlugin.WebSocketAdvanced ws = new CordovaWebsocketPlugin.WebSocketAdvanced(wsOptions, null, true);
+                 Log.d("WSCode****", "" + ws);
+                //Log.d("ResponseCode****",""+ws.responseCode);
+
+            }
+        }
+
+
+    };
+
 
     private class TimeDisplayTimerTask extends TimerTask {
         @Override
         public void run() {
-
-            mHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    Toast.makeText(getApplicationContext(), "Service already started", Toast.LENGTH_SHORT).show();
-                    if (!serviceRunning) {
-                        CordovaWebsocketPlugin.WebSocketAdvanced ws = new CordovaWebsocketPlugin.WebSocketAdvanced(wsOptions, null, true);
-                        Log.d("WSCode****", "" + ws);
-                        //Log.d("ResponseCode****",""+ws.responseCode);
-
-                    }
-                }
-            });
+            mHandler.post(runnable);
         }
     }
 

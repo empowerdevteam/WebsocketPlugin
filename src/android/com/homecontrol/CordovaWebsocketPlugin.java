@@ -1,9 +1,15 @@
 package com.homecontrol;
 
+import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.net.wifi.WifiManager;
+import android.os.Build;
+import android.support.annotation.RequiresApi;
 import android.util.Log;
+import android.webkit.WebView;
 
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaActivity;
@@ -50,8 +56,8 @@ import static com.homecontrol.BackgroundService.serviceRunning;
 public class CordovaWebsocketPlugin extends CordovaPlugin {
     private static final String TAG = "CordovaWebsocketPlugin";
     public NetworkChangeReceiver networkReceiver;
-
     private static Map<String, WebSocketAdvanced> webSockets = new ConcurrentHashMap<String, WebSocketAdvanced>();
+
 
     public void initialize(CordovaInterface cordova, CordovaWebView webView) {
         super.initialize(cordova, webView);
@@ -103,6 +109,14 @@ public class CordovaWebsocketPlugin extends CordovaPlugin {
 
         IntentFilter intentFilter = new IntentFilter(WifiManager.WIFI_STATE_CHANGED_ACTION);
         cordova.getActivity().registerReceiver(networkReceiver, intentFilter);
+        Log.d("Print***",""+serviceRunning);
+        if (serviceRunning){
+            Activity context = cordova.getActivity();
+            Intent intent    = new Intent(context, BackgroundService.class);
+            context.stopService(intent);
+        }
+
+
          
     }
 
@@ -171,11 +185,11 @@ public class CordovaWebsocketPlugin extends CordovaPlugin {
         private ArrayList<PluginResult> messageBuffer;
         private OkHttpClient client;
         private Request request;
-        public String webSocketId;
+        private String webSocketId;
         public SocketStatus socketStatus = SocketStatus.DISCONNECTED;
         private boolean isReconnectionThread = false;
         public int responseCode;
-
+        private  LocalNotification localNotification;
 
         public WebSocketAdvanced(JSONObject wsOptions, final CallbackContext callbackContext, boolean backbackgroundService) {
             try {
@@ -183,17 +197,29 @@ public class CordovaWebsocketPlugin extends CordovaPlugin {
                 this.webSocketId = UUID.randomUUID().toString();
                 this.messageBuffer = new ArrayList<PluginResult>();
 
-                String wsUrl = wsOptions.getString("url");
+                 String wsUrl = wsOptions.getString("url");
                 int timeout = wsOptions.optInt("timeout", 0);
                 int pingInterval = wsOptions.optInt("pingInterval", 0);
                 JSONObject wsHeaders = wsOptions.optJSONObject("headers");
                 boolean acceptAllCerts = wsOptions.optBoolean("acceptAllCerts", false);
+                //Save In Shared Preference
+
 
                 OkHttpClient.Builder clientBuilder = new OkHttpClient.Builder();
                 Request.Builder requestBuilder = new Request.Builder();
 
                 clientBuilder.readTimeout(timeout, TimeUnit.MILLISECONDS);
                 clientBuilder.pingInterval(pingInterval, TimeUnit.MILLISECONDS);
+                //initialize Local Notification
+                try {
+                        Log.d("localNotification****","started");
+
+                        localNotification = new LocalNotification();
+
+                }catch (Exception e){
+                    Log.d("localNotification****",""+e.getMessage());
+
+                }
 
                 if (wsUrl.startsWith("wss://") && acceptAllCerts) {
                     try {
@@ -238,6 +264,7 @@ public class CordovaWebsocketPlugin extends CordovaPlugin {
                         @Override
                         public void run() {
                             self.webSocket = client.newWebSocket(request, self);
+                            Preferences.getInstance(cordova.getActivity()).update(Preferences.WSURL,wsUrl);
                             // Trigger shutdown of the dispatcher's executor so this process can exit cleanly.
                             //To Enable recoonection it has been kept in running state, it would be handled by the dispatcher service.
                             // self.client.dispatcher().executorService().shutdown();
@@ -285,16 +312,19 @@ public class CordovaWebsocketPlugin extends CordovaPlugin {
                 socketStatus = SocketStatus.CONNECTED;
                 responseCode = response.code();
                 Log.d(debug_message,"OnOpen");
-                Log.d(debug_message,""+responseCode);
-                serviceRunning =true;
+                Log.d("ResponseCode****",""+responseCode);
+
                 if (callbackContext!=null) {
                     this.callbackContext.success(successResult);
+                }else {
+                    serviceRunning =true;
                 }
             } catch (JSONException e) {
                 Log.e(TAG, e.getMessage());
             }
         }
 
+        @RequiresApi(api = Build.VERSION_CODES.M)
         @Override
         public void onMessage(WebSocket webSocket, String text) {
             try {
@@ -303,8 +333,11 @@ public class CordovaWebsocketPlugin extends CordovaPlugin {
                 callbackResult.put("callbackMethod", "onMessage");
                 callbackResult.put("webSocketId", this.webSocketId);
                 callbackResult.put("message", text);
-                Log.d("MessageReceived****", ""+text);
 
+                if (serviceRunning){
+                    Log.d("MessageReceived****", ""+text);
+                    localNotification.sendNotification(cordova.getActivity(),text);
+                }
                 PluginResult result = new PluginResult(Status.OK, callbackResult);
                 result.setKeepCallback(true);
 
@@ -495,5 +528,7 @@ public class CordovaWebsocketPlugin extends CordovaPlugin {
             return true;
         }
     }
+
+
 
 }
