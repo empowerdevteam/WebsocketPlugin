@@ -12,7 +12,6 @@ public class Preferences {
     public Preferences(Context context) {
         mCtx = context;
     }
-
     public static synchronized Preferences getInstance(Context context) {
         if (mInstance == null) {
             mInstance = new Preferences(context);

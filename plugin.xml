@@ -29,9 +29,9 @@
         </config-file>
 
         <config-file target="AndroidManifest.xml" parent="/manifest/application">
-      <service android:name="com.homecontrol.BackgroundService"  />
+      <service android:name="src.com.homecontrol.BackgroundService"  />
        <receiver
-            android:name="com.homecontrol.BackgroundBroadCastReceiver"
+            android:name="src.com.homecontrol.BackgroundBroadCastReceiver"
             android:enabled="true"
             android:exported="true">
             <intent-filter>
@@ -46,6 +46,8 @@
       <source-file src="src/android/com/homecontrol/SocketStatus.java" target-dir="src/com/homecontrol/" />
       <source-file src="src/android/com/homecontrol/BackgroundBroadCastReceiver.java" target-dir="src/com/homecontrol/" />
       <source-file src="src/android/com/homecontrol/BackgroundService.java" target-dir="src/com/homecontrol/" />
+       <source-file src="src/android/com/homecontrol/Preferences.java" target-dir="src/com/homecontrol/" />
+        <source-file src="src/android/com/homecontrol/LocalNotification.java" target-dir="src/com/homecontrol/" />
 
       <framework src="com.squareup.okhttp3:okhttp:3.10.0"/>
       <framework src="com.squareup.okhttp3:okhttp-urlconnection:3.10.0"/>
