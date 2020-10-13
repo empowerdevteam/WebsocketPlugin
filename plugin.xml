@@ -15,6 +15,9 @@
         <runs/>
         <clobbers target="CordovaWebsocketPlugin" />
       </js-module>
+       <preference name="ANDROID_SUPPORT_V4_VERSION" default="27.+" />
+        <framework src="com.android.support:support-v4:$ANDROID_SUPPORT_V4_VERSION" />
+        <framework src="src/android/build/localnotification.gradle" custom="true" type="gradleReference"/>
       <config-file target="res/xml/config.xml" parent="/*">
         <feature name="CordovaWebsocketPlugin">
           <param name="android-package" value="com.homecontrol.CordovaWebsocketPlugin" />
