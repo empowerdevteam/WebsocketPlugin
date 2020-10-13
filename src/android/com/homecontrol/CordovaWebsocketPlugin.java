@@ -130,7 +130,7 @@ public class CordovaWebsocketPlugin extends CordovaPlugin {
     private void wsConnect(JSONArray args, CallbackContext callbackContext) {
         try {
             JSONObject wsOptions = args.getJSONObject(0);
-            WebSocketAdvanced ws = new WebSocketAdvanced(wsOptions, callbackContext, false);
+            WebSocketAdvanced ws = new WebSocketAdvanced(wsOptions, callbackContext);
             this.webSockets.put(ws.webSocketId, ws);
         } catch (JSONException e) {
             Log.e(TAG, e.getMessage());
@@ -189,9 +189,9 @@ public class CordovaWebsocketPlugin extends CordovaPlugin {
         public SocketStatus socketStatus = SocketStatus.DISCONNECTED;
         private boolean isReconnectionThread = false;
         public int responseCode;
-        private  LocalNotification localNotification;
+        public static String server_message;
 
-        public WebSocketAdvanced(JSONObject wsOptions, final CallbackContext callbackContext, boolean backbackgroundService) {
+        public WebSocketAdvanced(JSONObject wsOptions, final CallbackContext callbackContext) {
             try {
                 this.callbackContext = callbackContext;
                 this.webSocketId = UUID.randomUUID().toString();
@@ -202,24 +202,14 @@ public class CordovaWebsocketPlugin extends CordovaPlugin {
                 int pingInterval = wsOptions.optInt("pingInterval", 0);
                 JSONObject wsHeaders = wsOptions.optJSONObject("headers");
                 boolean acceptAllCerts = wsOptions.optBoolean("acceptAllCerts", false);
-                //Save In Shared Preference
-
 
                 OkHttpClient.Builder clientBuilder = new OkHttpClient.Builder();
                 Request.Builder requestBuilder = new Request.Builder();
 
                 clientBuilder.readTimeout(timeout, TimeUnit.MILLISECONDS);
                 clientBuilder.pingInterval(pingInterval, TimeUnit.MILLISECONDS);
-                //initialize Local Notification
-                try {
-                        Log.d("localNotification****","started");
-
-                        localNotification = new LocalNotification();
-
-                }catch (Exception e){
-                    Log.d("localNotification****",""+e.getMessage());
-
-                }
+                
+        
 
                 if (wsUrl.startsWith("wss://") && acceptAllCerts) {
                     try {
@@ -257,7 +247,7 @@ public class CordovaWebsocketPlugin extends CordovaPlugin {
 
                 final WebSocketAdvanced self = this;
 
-                if (backbackgroundService){
+                if (serviceRunning){
                     self.webSocket = client.newWebSocket(request, self);
                 }else{
                     cordova.getThreadPool().execute(new Runnable() {
@@ -334,9 +324,10 @@ public class CordovaWebsocketPlugin extends CordovaPlugin {
                 callbackResult.put("webSocketId", this.webSocketId);
                 callbackResult.put("message", text);
 
-                if (serviceRunning){
-                    Log.d("MessageReceived****", ""+text);
-                    localNotification.sendNotification(cordova.getActivity(),text);
+                 if (serviceRunning) {  
+                    Log.d("MessageReceived****", "" + text);    
+                    server_message = text;  
+                  
                 }
                 PluginResult result = new PluginResult(Status.OK, callbackResult);
                 result.setKeepCallback(true);

@@ -19,10 +19,11 @@ import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import static com.homecontrol.CordovaWebsocketPlugin.WebSocketAdvanced.server_message;
 import static com.homecontrol.CordovaWebsocketPlugin.getApplicationWebSocket;
 
 
-public class BackgroundService extends Service {
+public class BackgroundService extends Service{
 
 
     public static final long INTERVAL=10000;//variable to execute services every 10 second
@@ -32,7 +33,8 @@ public class BackgroundService extends Service {
     public static boolean serviceRunning = false;
     public  boolean backgroundService = true;
     JSONObject wsOptions;
-    
+    LocalNotification localNotification;
+
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
@@ -42,11 +44,14 @@ public class BackgroundService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         webSocketAdvancedMap = getApplicationWebSocket();
+      String url =  Preferences.getInstance(getApplicationContext()).getdata(com.homecontrol.Preferences.WSURL).trim();
+        Log.d("url****", "" + url);
+        localNotification= new LocalNotification();
 
         wsOptions  = new JSONObject();
         try {
-            wsOptions.put("url","wss://2aqh15tm0b.execute-api.us-east-2.amazonaws.com/dev");
-            wsOptions.put("timeout","5000");
+            wsOptions.put("url",url);
+            wsOptions.put("timeout","10000");
             wsOptions.put("pingInterval","60000");
             wsOptions.put("acceptAllCerts","false");
         } catch (JSONException e) {
@@ -78,9 +83,14 @@ public class BackgroundService extends Service {
         @Override
         public void run() {
             Toast.makeText(getApplicationContext(), "Cordic Keep Alive Testing", Toast.LENGTH_SHORT).show();
+            if (server_message != null){
+                localNotification.sendNotification(getApplicationContext(),server_message);
+
+            }
+
             if (!serviceRunning) {
-                CordovaWebsocketPlugin.WebSocketAdvanced ws = new CordovaWebsocketPlugin.WebSocketAdvanced(wsOptions, null, true);
-                 Log.d("WSCode****", "" + ws);
+                CordovaWebsocketPlugin.WebSocketAdvanced ws = new CordovaWebsocketPlugin.WebSocketAdvanced(wsOptions, null);
+                Log.d("WSCode****", "" + ws);
                 //Log.d("ResponseCode****",""+ws.responseCode);
 
             }

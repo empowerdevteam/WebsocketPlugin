@@ -3,10 +3,8 @@ package com.homecontrol;
 import android.app.NotificationManager;
 import android.content.Context;
 import android.os.Build;
-import android.support.annotation.RequiresApi;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
-
 import io.ionic.starter.R;
 
 
@@ -14,7 +12,6 @@ public class LocalNotification {
 
     String CHANNEL_ID = "com.cordic.app";
     CharSequence notification_name = "CORDIC Notification";
-
 
     public void sendNotification(Context context, String text) {
         Log.d("localNotification****","Inside");
@@ -31,7 +28,7 @@ public class LocalNotification {
                 .setSmallIcon(R.mipmap.ic_launcher)
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-                .setStyle(new NotificationCompat.BigTextStyle().bigText("Cordic has a notification"))
+                .setStyle(new NotificationCompat.BigTextStyle().bigText(text))
                 .setContentText("Click to view the activity"
                 )
                 .setChannelId(CHANNEL_ID);
@@ -39,4 +36,5 @@ public class LocalNotification {
         NotificationManager mNotificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         mNotificationManager.notify(001, mBuilder.build());
     }
+
 }
