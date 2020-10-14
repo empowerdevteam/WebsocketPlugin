@@ -19,7 +19,8 @@ import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import static com.homecontrol.CordovaWebsocketPlugin.WebSocketAdvanced.server_message;
+
+import static com.homecontrol.BackgroundWebSocket.server_message;
 import static com.homecontrol.CordovaWebsocketPlugin.getApplicationWebSocket;
 
 
@@ -34,6 +35,7 @@ public class BackgroundService extends Service{
     public  boolean backgroundService = true;
     JSONObject wsOptions;
     LocalNotification localNotification;
+    BackgroundWebSocket bgWs;
 
     @Nullable
     @Override
@@ -89,8 +91,8 @@ public class BackgroundService extends Service{
             }
 
          
-        if (!serviceRunning) {
-            BackgroundWebSocket bgWs = new BackgroundWebSocket(wsOptions);
+        if (bgWs == null) {
+            bgWs = new BackgroundWebSocket(wsOptions);
             Log.d("WSCode****", "" + bgWs);
             //Log.d("ResponseCode****",""+ws.responseCode);
 

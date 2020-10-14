@@ -109,7 +109,7 @@ public class CordovaWebsocketPlugin extends CordovaPlugin {
 
         IntentFilter intentFilter = new IntentFilter(WifiManager.WIFI_STATE_CHANGED_ACTION);
         cordova.getActivity().registerReceiver(networkReceiver, intentFilter);
-        Log.d("Print***",""+serviceRunning);
+        //Log.d("Print***",""+serviceRunning);
         if (serviceRunning){
             Activity context = cordova.getActivity();
             Intent intent    = new Intent(context, BackgroundService.class);
@@ -177,7 +177,7 @@ public class CordovaWebsocketPlugin extends CordovaPlugin {
     }
 
 
-    public static class WebSocketAdvanced extends WebSocketListener {
+    public  class WebSocketAdvanced extends WebSocketListener {
 
         private WebSocket webSocket;
         private CallbackContext callbackContext;
@@ -189,7 +189,7 @@ public class CordovaWebsocketPlugin extends CordovaPlugin {
         public SocketStatus socketStatus = SocketStatus.DISCONNECTED;
         private boolean isReconnectionThread = false;
         public int responseCode;
-        public static String server_message;
+        public  String server_message;
 
         public WebSocketAdvanced(JSONObject wsOptions, final CallbackContext callbackContext) {
             try {

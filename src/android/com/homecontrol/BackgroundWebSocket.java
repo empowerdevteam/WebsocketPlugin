@@ -27,16 +27,15 @@ import okhttp3.WebSocket;
 import okhttp3.WebSocketListener;
 import okio.ByteString;
 
-import static com.homecontrol.BackgroundService.serviceRunning;
-
 public class BackgroundWebSocket extends WebSocketListener {
     private WebSocket webSocket;
     private OkHttpClient client;
     private Request request;
     public String webSocketId;
     public String TAG = "BackGroundWebSocket";
+    public static String server_message;
 
-    public BackgroundWebSocket(JSONObject wsOptions)  {
+    public BackgroundWebSocket(JSONObject wsOptions) {
         this.webSocketId = UUID.randomUUID().toString();
         try {
             String wsUrl = wsOptions.getString("url");
@@ -86,10 +85,7 @@ public class BackgroundWebSocket extends WebSocketListener {
             this.request = requestBuilder.build();
 
             final BackgroundWebSocket self = this;
-
-            if (serviceRunning) {
-                self.webSocket = client.newWebSocket(request, self);
-            }
+            self.webSocket = client.newWebSocket(request, self);
 
 
         } catch (
@@ -102,11 +98,19 @@ public class BackgroundWebSocket extends WebSocketListener {
     @Override
     public void onOpen(WebSocket webSocket, Response response) {
         super.onOpen(webSocket, response);
+
+        Log.d("Print***", "onOpen");
+        Log.d("Print***", "onOpen" + response.code());
+
+
     }
 
     @Override
     public void onMessage(WebSocket webSocket, String text) {
         super.onMessage(webSocket, text);
+        Log.d("Message***", "OnMessage");
+        Log.d("Message***", "onOpen** " + text);
+        server_message = text;
     }
 
     @Override
@@ -129,8 +133,7 @@ public class BackgroundWebSocket extends WebSocketListener {
         super.onFailure(webSocket, t, response);
     }
 
-
-    private  class GullibleTrustManager implements X509TrustManager {
+    private class GullibleTrustManager implements X509TrustManager {
         private static final String TAG = "GullibleTrustManager";
 
         @Override
