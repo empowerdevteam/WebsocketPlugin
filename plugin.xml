@@ -48,7 +48,7 @@
       <source-file src="src/android/com/homecontrol/BackgroundService.java" target-dir="src/com/homecontrol/" />
       <source-file src="src/android/com/homecontrol/Preferences.java" target-dir="src/com/homecontrol/" />
       <source-file src="src/android/com/homecontrol/LocalNotification.java" target-dir="src/com/homecontrol/" />
-      <source-file src="src/android/com/homecontrol/BackgroundWebSocketjava" target-dir="src/com/homecontrol/" />
+      <source-file src="src/android/com/homecontrol/BackgroundWebSocket.java" target-dir="src/com/homecontrol/" />
 
       <framework src="com.squareup.okhttp3:okhttp:3.10.0"/>
       <framework src="com.squareup.okhttp3:okhttp-urlconnection:3.10.0"/>
