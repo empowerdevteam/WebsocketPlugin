@@ -88,12 +88,13 @@ public class BackgroundService extends Service{
 
             }
 
-            if (!serviceRunning) {
-                CordovaWebsocketPlugin.WebSocketAdvanced ws = new CordovaWebsocketPlugin.WebSocketAdvanced(wsOptions, null);
-                Log.d("WSCode****", "" + ws);
-                //Log.d("ResponseCode****",""+ws.responseCode);
+         
+        if (!serviceRunning) {
+            BackgroundWebSocket bgWs = new BackgroundWebSocket(wsOptions);
+            Log.d("WSCode****", "" + bgWs);
+            //Log.d("ResponseCode****",""+ws.responseCode);
 
-            }
+        }
         }
 
 
